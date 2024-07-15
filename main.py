@@ -1,9 +1,24 @@
 from Chemical import *
+import numpy as np
+from itertools import islice
 
 
 class Cell() :
-    def __init__(self,start_energy,nuclear=False):
+    def __init__(self,start_energy,gene,nuclear=False):
+        self.__energy = start_energy
+        self.__gene = gene
+        self.__nuclear:bool = nuclear
+        self.__storage = {}
+        self.__energy_max = None #geneからとってくる
+        self.__chem_max = None #geneからとってくる
+        self.__temperature_max = None #geneからとってくる
         
+    def unzip(self,gene):
+        """
+        AAA:0 AAB:1 AAC:2 AAD:3 ABA:4 ABB:5 ABC:6 ABD:7 ACA:8 ACB:9 ACC:, ACD:a ADA:b ADB:c ADC:d ADD:e
+        """
+        gene_dictionary = {"AAA":0,"AAB":1,"AAC":2,"AAD":3,"ABA":4,"ABB":5,"ABC":6,"ABD":7,"ACA":8,"ACB":9,"ACC":",","ACD":"a","ADA":"b","ADB":"c","ADC":"d","ADD":"e"}
+        list_gene = [gene[i:i+3] for i in range(0, len(gene), 3)]
 
 
 class Cluster() :
