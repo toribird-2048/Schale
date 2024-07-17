@@ -22,22 +22,43 @@ class Cell() :
     def detect(self):
         pass
 
+    def create_Nuclear(self) :
+        pass
 
-class Cluster() :
-    pass
+class Nuclear() :
+    def __init__(self,x,y):
+        self.__x = x
+        self.__y = y
+        self.__cells:list[Cell] = None
+        self.__energy:float = 0
+        self.__energy_max:float = 0
+        self.__chem_max:int = 0
+
+    def energy_max_check(self) :
+        if self.__energy_max < self.__energy :
+            self.__energy_max = self.__energy
+
+    def move(self,dest):
+        if dest not in ("n","w","e","s") :
+            raise ValueError()
+        if dest == "n" :
+            if self.__y > 0 :
+                
+                
+
 
 
 class Block() :
     def __init__(self,x,y):
         self.__x = x
         self.__y = y
-        self.__cluster:Cluster = None
+        self.__nuclear:Nuclear = None
         self.__temperature:float = 0
         self.__lightness:float = 0
         self.__substances = {}
         
-    def rewrite_cluster(self,cluster:Cluster):
-        self.__cluster = cluster
+    def rewrite_Nuclear(self,Nuclear:Nuclear):
+        self.__Nuclear = Nuclear
         
     def add_substance(self,substances:list[Chemical]):
         for substance in substances:
@@ -74,10 +95,11 @@ class Field() :
 
 class CMS() :
     """Center Management System."""
-    def __init__(self, field:Field, cluster_num:int) :
+    def __init__(self, field:Field) :
         self.__field = field
-        self.__clusters:list = [Cluster() for _ in range(cluster_num)]
-        self.__current_cluster_num = 0 #この上のCluster引数あとで変える必要あり
+
+    def generate(self,h,w,Nuclear_rate) :
+
 
 
 field = Field(10,10)
