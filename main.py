@@ -1,106 +1,56 @@
-from Chemical import *
 import numpy as np
-from itertools import islice
 
 
-class Cell() :
-    def __init__(self,start_energy,gene):
-        self.__energy = start_energy
-        self.__gene = gene
-        self.__storage = {}
-        self.__energy_max = None #geneからとってくる
-        self.__chem_max = None #geneからとってくる
-        self.__temperature_max = None #geneからとってくる
-        
-    def unzip(self,gene):
+base_energy_max = 10
+base_red_max = 2
+base_green_max = 2
+base_blue_max = 2
+
+
+class Cell :
+    def __init__(self,energy,red,green,blue,detect_list,neural):
+        self.energy:float = energy
+        self.red:int = red
+        self.green:int = green
+        self.blue:int = blue
+        self.detect_list:list[str] = detect_list
+        self.neural:np.array = neural
+    
+    def detector(self,object_list,detect_list):
+        return [detect_list[k] in object_list for k in range(detect_list)]
+
+    def neural_net(self,inputs:np.array):
+        return np.dot(inputs,self.neural)
+
+    def storage(self,inputs):
         """
-        A:0 B:1 C:2 D:3 E:4 F:5 G:6 H:7 I:8 J:9 K:,
+        energy,red,green,blue
         """
-        gene_dictionary = {"A":0,"B":1,"C":2,"D":3,"E":4,"F":5,"G":6,"H":7,"I":8,"J":9,"K":","}
-        list_gene = list(gene)
-
-    def detect(self):
-        pass
-
-    def create_Nuclear(self) :
-        pass
-
-class Nuclear() :
-    def __init__(self,x,y):
-        self.__x = x
-        self.__y = y
-        self.__cells:list[Cell] = None
-        self.__energy:float = 0
-        self.__energy_max:float = 0
-        self.__chem_max:int = 0
-
-    def energy_max_check(self) :
-        if self.__energy_max < self.__energy :
-            self.__energy_max = self.__energy
-
-    def move(self,dest):
-        if dest not in ("n","w","e","s") :
-            raise ValueError()
-        if dest == "n" :
-            if self.__y > 0 :
-                
-                
+        output = [0,0,0,0]
+        if base_energy_max <= self.energy + inputs[0]:
+            self.energy = base_energy_max
+            output[0] = self.energy + inputs[0] - base_energy_max
+        else :
+            self.energy += inputs[0]
+        if base_red_max <= self.red + inputs[1]:
+            self.red = base_red_max
+            output[1] = self.red + inputs[1] - base_red_max
+        else :
+            self.red += inputs[1]
+        if base_green_max <= self.green + inputs[2]:
+            self.green = base_green_max
+            output[2] = self.green + inputs[2] - base_green_max
+        else :
+            self.green += inputs[2]
+        if base_blue_max <= self.blue + inputs[3]:
+            self.blue = base_blue_max
+            output[3] = self.blue + inputs[3] - base_blue_max
+        else :
+            self.blue += inputs[3]
+        return output
 
 
-
-class Block() :
-    def __init__(self,x,y):
-        self.__x = x
-        self.__y = y
-        self.__nuclear:Nuclear = None
-        self.__temperature:float = 0
-        self.__lightness:float = 0
-        self.__substances = {}
-        
-    def rewrite_Nuclear(self,Nuclear:Nuclear):
-        self.__Nuclear = Nuclear
-        
-    def add_substance(self,substances:list[Chemical]):
-        for substance in substances:
-            if substance in self.__substances.keys():
-                self.__substances[substance] += 1
-            elif substance not in self.__substances.keys():
-                self.__substances[substance] = 1
-            else :
-                raise ValueError()
-            
-    def rewrite_temperature(self,temperature:float) :
-        self.__temperature = temperature
-
-    def get_info(self):
-        return self.__temperature, self.__lightness, self.__substances
-        
-
-class Field() :
-    def __init__(self,h:int,w:int) :
-        self.__field:list = [[None for k in range(h)] for l in range(w)]
-        self.__h = h
-        self.__w = w
-
-    def add_block(self, block:Block, x:int, y:int):
-        if x < 0 or x >= len(self.__field) or y < 0 or y >= len(self.__field[0]):
-            raise IndexError()
-        self.__field[x][y] = block
-
-    def init_block(self) :
-        for i in range(self.__h):
-            for j in range(self.__w):
-                block = Block(i, j)
-                self.add_block(block, i, j)
-
-class CMS() :
-    """Center Management System."""
-    def __init__(self, field:Field) :
-        self.__field = field
-
-    def generate(self,h,w,Nuclear_rate) :
-
-
-
-field = Field(10,10)
-field.init_block()
+class Cluster :
+    def __init__(self,stage_count,gene):
+        self.stage_count:int = stage_count
+        self.gene:str = gene
