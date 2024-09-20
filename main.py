@@ -1,32 +1,49 @@
 import numpy as np
 
 
-
-self.white_max = 2
-
-
 class Cell :
-    def __init__(self,energy,red,green,blue,detect_list,neural):
+    def __init__(self,energy,red,green,blue,detect_list,detect_max_list,detect_min_list,neural,stage,id):
+        """
+        Detect_list : In Stage -> Info1~Info16,energy,red,green,blue and In Cell -> energy,red,green,blue
+        """
         self.energy:float = energy
         self.red:int = red
         self.green:int = green
         self.blue:int = blue
-        self.detect_list:list[str] = detect_list
+        self.detect_max_list:list = detect_max_list # Length must be 21 
+        self.detect_min_list:list = detect_min_list # Length must be 21 
         self.neural:np.array = neural
         self.outputs:list[float,int,int, int] = [0.0,0,0,0]
-        self.energy_max = 10
-        self.red_max = 10
-        self.green_max = 10
-        self.blue_max = 10
+        self.energy_max:float = 10
+        self.red_max:int = 10
+        self.green_max:int = 10
+        self.blue_max:int = 10
+        self.stage:int = stage
+        self.id:int = id
     
-    def detector(self,object_list,detect_list):
-        return [detect_list[k] in object_list for k in range(detect_list)]
+    def detector(self):
+        detecteds = []
+        for k in range(21):
+            if IDs[self.id].info_stage(self.stage)[k] <= self.detect_min_list[k] :
+                detecteds.append(0)
+            elif self.detect_max_list[k] <= IDs[self.id].info_stage(self.stage)[k] :
+                detecteds.append(1)
+            else :
+                detecteds.append((IDs[self.id].info_stage(self.stage)[k] - self.detect_min_list[k]) / self.detect_max_list[k] - self.detect_min_list[k])
+        detecteds.append(self.energy/self.energy_max)
+        detecteds.append(self.red/self.red_max)
+        detecteds.append(self.green/self.green_max)
+        detecteds.append(self.blue/self.blue_max)
+        return detecteds
 
-    def neural_net(self,inputs:np.array):
-        return np.dot(inputs,self.neural)
-    
+    def neural_net(self):
+        output = np.dot(self.neural,np.array(self.detector()))
+        output_list = output.T
+        #TODO: IDsの中のClusterのstageから必要数を引いてadd_storageするところ
+
     def info(self):
         return f"energy : {self.energy}, red : {self.red}, green : {self.green}, blue : {self.blue}"
+
 
     def add_storage(self,inputs):
         """
@@ -64,23 +81,27 @@ class Cell :
             self.energy -= inputs[0]
             output[0] = inputs[0]
         else :
-            raise ValueError
+            return False
         if self.red >= inputs[1]:
             self.red -= inputs[1]
             output[1] = inputs[1]
         else :
-            raise ValueError
+            return False
         if self.green >= inputs[2]:
             self.green -= inputs[2]
             output[2] = inputs[2]
         else :
-            raise ValueError
+            return False
         if self.blue >= inputs[3]:
             self.blue -= inputs[3]
             output[3] = inputs[3]
         else :
-            raise ValueError
+            return False
         self.outputs = [self.outputs[0]+output[0], self.outputs[1]+output[1], self.outputs[2]+output[2], self.outputs[3]+output[3] ]
+
+
+class InOut(Cell) :
+    pass
 
 
 class Factory(Cell) :
@@ -256,9 +277,39 @@ class Storage(Cell) :
         self.outputs = [self.outputs[0]+output[0], self.outputs[1]+output[1], self.outputs[2]+output[2], self.outputs[3]+output[3], self.outputs[4]+output[4] ]
 
 
+class Leaf(Cell) :
+    def __init__(self, color):
+        super().__init__()
+
+    def create_energy(self):
+        self.add_storage([1,0,0,0,0])
+
+
+class Detector(Cell) :
+    pass
+
+
+class Eater(Cell) :
+    pass
+
+
 class Cluster :
-    def __init__(self,stage_count,gene):
+    def __init__(self,stage_count,gene,id):
+        """
+        info1~info16,energy,red,green,blue,white
+        """
+        self.id:int = id
         self.stage_count:int = stage_count
         self.gene:str = gene
+        self.stages:list = [[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0] for k in range(stage_count)]
+
+    def info_stage(self, stage_num):
+        return self.stages[stage_num]
+    
+    def next_stage(self):
+        for k in range(self.stage_count-1):
+            self.stages[k+1] = self.stages[k]
+        self.stages[0] = self.stages[self.stage_count]
 
 
+IDs: list[Cluster] = []
