@@ -1,4 +1,5 @@
 import numpy as np
+from dataclasses import dataclass
 
 
 class Cell :
@@ -15,6 +16,11 @@ class Cell :
         self.stage:int = stage
         self.ClusterID:int = ClusterID
         self.input_queue:list[float,int,int,int,int] = [0,0,0,0,0]
+    
+    def __post_init__(self):
+        for k in range(len(self.storage)) :
+            if self.maxes[k] <= self.storage[k] :
+                self.storage[k] = self.maxes[k]
     
     def detector(self):
         detecteds = []
@@ -198,9 +204,9 @@ class Cluster :
 ClusterIDs: list[Cluster] = []
 
 
-cell = Factory(10,2,2,2,0,[10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],np.array([0,0,0]),0,0)
+cell = Storage(10,2,2,2,0,[10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],np.array([0,0,0]),0,0)
 cluster = Cluster(1,"aaa",0)
 ClusterIDs = [cluster]
 
-print(cell.create_white())
+
 print(cell.info())
