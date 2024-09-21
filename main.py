@@ -31,10 +31,10 @@ class Cell :
                 detecteds.append(1)
             else :
                 detecteds.append((ClusterIDs[self.ClusterID].info_stage(self.stage)[k] - self.detect_min_list[k]) / (self.detect_max_list[k] - self.detect_min_list[k]) - 0.5)
-        detecteds.append(self.energy/self.energy_max-0.5)
-        detecteds.append(self.red/self.red_max-0.5)
-        detecteds.append(self.green/self.green_max-0.5)
-        detecteds.append(self.blue/self.blue_max-0.5)
+        detecteds.append(2*self.energy/self.energy_max-0.5)
+        detecteds.append(2*self.red/self.red_max-0.5)
+        detecteds.append(2*self.green/self.green_max-0.5)
+        detecteds.append(2*self.blue/self.blue_max-0.5)
         return detecteds
 
     def neural_net(self):
@@ -337,8 +337,9 @@ class Cluster :
 ClusterIDs: list[Cluster] = []
 
 
-cell = Cell(0,0,0,0,[10,10,10,10],[0,0,0,0],np.array(10),0,0)
+cell = Cell(10,0,0,0,[10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],np.array(10),0,0)
 cluster = Cluster(1,"aaa",0)
 ClusterIDs = [cluster]
 
 print(cell.detector())
+print(cell.info())
