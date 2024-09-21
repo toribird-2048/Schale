@@ -2,7 +2,7 @@ import numpy as np
 
 
 class Cell :
-    def __init__(self,energy,red,green,blue,detect_list,detect_max_list,detect_min_list,neural,stage,id):
+    def __init__(self,energy,red,green,blue,detect_max_list,detect_min_list,neural,stage,ClusterID):
         """
         Detect_list : In Stage -> Info1~Info16,energy,red,green,blue and In Cell -> energy,red,green,blue
         """
@@ -19,31 +19,43 @@ class Cell :
         self.green_max:int = 10
         self.blue_max:int = 10
         self.stage:int = stage
-        self.id:int = id
+        self.ClusterID:int = ClusterID
+        self.input_queue:list[float,int,int,int] = [0.0,0,0]
     
     def detector(self):
         detecteds = []
         for k in range(21):
-            if IDs[self.id].info_stage(self.stage)[k] <= self.detect_min_list[k] :
-                detecteds.append(0)
-            elif self.detect_max_list[k] <= IDs[self.id].info_stage(self.stage)[k] :
+            if ClusterIDs[self.ClusterID].info_stage(self.stage)[k] <= self.detect_min_list[k] :
+                detecteds.append(-1)
+            elif self.detect_max_list[k] <= ClusterIDs[self.ClusterID].info_stage(self.stage)[k] :
                 detecteds.append(1)
             else :
-                detecteds.append((IDs[self.id].info_stage(self.stage)[k] - self.detect_min_list[k]) / self.detect_max_list[k] - self.detect_min_list[k])
-        detecteds.append(self.energy/self.energy_max)
-        detecteds.append(self.red/self.red_max)
-        detecteds.append(self.green/self.green_max)
-        detecteds.append(self.blue/self.blue_max)
+                detecteds.append((ClusterIDs[self.ClusterID].info_stage(self.stage)[k] - self.detect_min_list[k]) / (self.detect_max_list[k] - self.detect_min_list[k]) - 0.5)
+        detecteds.append(self.energy/self.energy_max-0.5)
+        detecteds.append(self.red/self.red_max-0.5)
+        detecteds.append(self.green/self.green_max-0.5)
+        detecteds.append(self.blue/self.blue_max-0.5)
         return detecteds
 
     def neural_net(self):
         output = np.dot(self.neural,np.array(self.detector()))
         output_list = output.T
-        #TODO: IDsの中のClusterのstageから必要数を引いてadd_storageするところ
+        adds = output_list[:4]
+        removes = output_list[4:]
+        for k in range(len(adds)):
+            self.input_queue[k] += adds[k]
+        pass
+        #TODO: ClusterIDsの中のClusterのstageから必要数を引いてadd_storageするところ
 
     def info(self):
         return f"energy : {self.energy}, red : {self.red}, green : {self.green}, blue : {self.blue}"
-
+    
+    def input(self,inputs:list) :
+        ClusterIDs[self.ClusterID].remove_stage(self.stage,17,1)
+        ClusterIDs[self.ClusterID].remove_stage(self.stage,18,1)
+        ClusterIDs[self.ClusterID].remove_stage(self.stage,19,1)
+        ClusterIDs[self.ClusterID].remove_stage(self.stage,20,1)
+        self.add_storage([])
 
     def add_storage(self,inputs):
         """
@@ -294,14 +306,15 @@ class Eater(Cell) :
 
 
 class Cluster :
-    def __init__(self,stage_count,gene,id):
+    def __init__(self,stage_count,gene,ClusterID):
         """
         info1~info16,energy,red,green,blue,white
         """
-        self.id:int = id
+        self.ClusterID:int = ClusterID
         self.stage_count:int = stage_count
         self.gene:str = gene
         self.stages:list = [[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0] for k in range(stage_count)]
+        #stage内の物量が多いほどenergy多く
 
     def info_stage(self, stage_num):
         return self.stages[stage_num]
@@ -311,5 +324,21 @@ class Cluster :
             self.stages[k+1] = self.stages[k]
         self.stages[0] = self.stages[self.stage_count]
 
+    def remove_stage(self,stage,type,amount):
+        if self.stages[stage][type] < amount :
+            pass
+        else :
+            self.stages[stage][type] -= amount
 
-IDs: list[Cluster] = []
+    def add_stage(self,stage,type,amount) :
+        self.stages[stage][type] += amount
+
+
+ClusterIDs: list[Cluster] = []
+
+
+cell = Cell(0,0,0,0,[10,10,10,10],[0,0,0,0],np.array(10),0,0)
+cluster = Cluster(1,"aaa",0)
+ClusterIDs = [cluster]
+
+print(cell.detector())
