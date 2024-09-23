@@ -73,6 +73,9 @@ class Cell :
         for k in range(5):
             ClusterIDs[self.ClusterID].add_stage(self.stage,16+k,output[k])
 
+    def output_infos(self,type) :
+        ClusterIDs[self.ClusterID].add_stage(self.stage,type,1)
+
     def add_storage(self,inputs):
         """
         energy,red,green,blue
