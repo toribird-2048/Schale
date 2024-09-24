@@ -1,9 +1,13 @@
-import numpy as np
+class Outer :
+    def __init__(self, number):
+        self.number = number
+        self.inner = self.Inner(self)
 
+    class Inner :
+        def __init__(self, outer):
+            self.outer = outer
+            self.number = outer.number + 10
 
-def sigmoid(a):
-    return 1 / (1 + np.exp(-a))
+outer = Outer(5)
 
-
-a = np.array([[0.1, 2, 3, 4],[1, 2, 3, 4],[1, 2, 3, 4]])
-print(sigmoid(a))
+print(outer.inner.number)  # Output: 15
