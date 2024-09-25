@@ -1,6 +1,8 @@
 import numpy as np
+import random
 from dataclasses import dataclass
 
+mutation_rate = 10 # 10/961
 
 class Field:
     def __init__(self,height,width):
@@ -10,7 +12,7 @@ class Field:
         self.material_blocks = [[[0 for _ in range(5)] for _ in range(width)] for _ in range(height)]
 
     class Cluster :
-        def __init__(self,field,x,y,stage_count,gene,ClusterID,detect_max_list,detect_min_list,neural,neural_ouput_maxes):
+        def __init__(self,field,x,y,stage_count,gene,ClusterID,detect_max_list,detect_min_list,neural,neural_output_maxes):
             """
             info1~info16,energy,red,green,blue,white
             """
@@ -21,18 +23,18 @@ class Field:
             self.stage_count:int = stage_count
             self.gene:str = gene
             self.stages:list = [[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0] for k in range(stage_count)]
-            self.cell_stages:list[self.Cell] = [[] for k in range(stage_count)]
+            self.cell_stages:list[Field.Cluster.Cell] = [[] for k in range(stage_count)]
             self.detect_max_list:list = detect_max_list # length must be 16
             self.detect_min_list:list = detect_min_list # same as detect_max_list
             self.neural:np.array = neural #横21縦16
-            self.neural_output_maxes = neural_ouput_maxes
-            self.add_cell_stage(0,self.ClusterDupricator(self,[1000,0,0,0,0],[10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],np.array([[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0.5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]]),0,[0,0,0,0,0],[0,0,0,0,0],0))
+            self.neural_output_maxes = neural_output_maxes
+            self.add_cell_stage(0,self.ClusterDupricator(self,0,[0,0,0,0,0],[10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],np.array([[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0.5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],]),0))
 
             #stage内の物量が多いほどenergy多く
 
-        
-        class Cell : #energy,red,green,blue,white(material_list),energy,red,green,blue,white(detect_max_list),energy,red,green,blue,white(detect_min_list),b00,b01...b025,b10...b125...b225......b2525(neural),energy,red,green,blue,white(neural_add_maxes),energy,red,green,blue,white(n)
-            def __init__(self,cluster,materials_list,detect_max_list,detect_min_list,neural,stage,neural_add_maxes,neural_remove_maxes,cell_ID):
+
+        class Cell : #stage,energy,red,green,blue,white(material_list),energy,red,green,blue,white(detect_max_list),energy,red,green,blue,white(detect_min_list),energy,red,green,blue,white(neural_add_maxes),energy,red,green,blue,white(n),b00,b01...b025,b10...b125...b225......b2525(neural)
+            def __init__(self,cluster,stage,materials_list,detect_max_list,detect_min_list,neural_add_maxes,neural_remove_maxes,neural,cell_ID):
                 """
                 Detect_list : In Stage -> Info1~Info16,energy,red,green,blue | In Cell -> energy,red,green,blue
                 """
@@ -53,7 +55,7 @@ class Field:
                 for k in range(len(self.storage)) :
                     if self.maxes[k] <= self.storage[k] :
                         self.storage[k] = self.maxes[k]
-            
+
             def detector(self):
                 detecteds = []
                 for k in range(21):
@@ -89,7 +91,7 @@ class Field:
 
             def info(self):
                 return f"energy : {self.storage[0]}, red : {self.storage[1]}, green : {self.storage[2]}, blue : {self.storage[3]}, white : {self.storage[4]}, ClusterID : {self.cluster.ClusterID}, stage : {self.stage}"
-            
+
             def infos_output(self,infos):
                 for k in range(16) :
                     cluster.add_stage(self.stage,k,infos[k])
@@ -113,6 +115,12 @@ class Field:
 
             def output_infos(self,type) :
                 cluster.add_stage(self.stage,type,1)
+
+            def consume_energy(self,amount):
+                if self.storage[0] >= amount:
+                    self.storage[0] -= amount
+                else:
+                    self.storage[0] = 0
 
             def add_storage(self,inputs):
                 """
@@ -146,7 +154,7 @@ class Field:
                     self.storage[4] += inputs[4]
                 self.outputs = [self.outputs[0]+output[0], self.outputs[1]+output[1], self.outputs[2]+output[2], self.outputs[3]+output[3], self.outputs[4]+output[4]]
                 return output
-            
+
             def remove_storage(self,inputs):
                 """
                 energy,red,green,blue
@@ -169,10 +177,10 @@ class Field:
                     output[4] = inputs[4]
                 self.outputs = [self.outputs[0]+output[0], self.outputs[1]+output[1], self.outputs[2]+output[2], self.outputs[3]+output[3], self.outputs[4]+output[4] ]
                 return output
-            
+
             def print_info(self):
                 print(f"{self.cell_ID} :: {self.info()}")
-            
+
             def cycle(self):
                 self.print_info()
                 self.neural_net()
@@ -183,7 +191,7 @@ class Field:
                 super().__init__(*args)
                 self.maxes[4] = 2
                 self.neural_add_maxes = [2,2,2,2,2]
-            
+
             def output_field(self,outputs):
                 outputs = self.remove_storage(outputs)
                 self.cluster.field.add_material(self.cluster.x,self.cluster.y,outputs)
@@ -192,7 +200,7 @@ class Field:
                 inputs = self.cluster.field.remove_material(self.cluster.x,self.cluster.y,inputs)
                 self.add_storage(inputs)
 
-            def neural_net(self):
+            def neural_net(self):#26*36
                 output = np.dot(self.neural,np.array(self.detector()).T)
                 output_list = output.T
                 #print(f"output{output_list}")
@@ -206,34 +214,31 @@ class Field:
                     #print(adds[k] * self.neural_add_maxes[k])
                 self.input_queue = [round(adds[k] * self.neural_add_maxes[k]) for k in range(5)]
                 self.input()
-                self.output([round(removes[k] * self.neural_remove_maxes[k]) for k in range(5)])
+                self.outputs =[round(removes[k] * self.neural_remove_maxes[k]) for k in range(5)]
+                self.output()
                 self.infos_output([round(infos[k]) for k in range(16)])
                 self.input_field([round(inputs[k] * self.neural_add_maxes[k]) for k in range(5)])
                 self.output_field([round(outputs[k] * self.neural_remove_maxes[k]) for k in range(5)])
-                
-
-
-            
 
 
         class Factory(Cell) :
             def __init__(self,*args) :
                 super().__init__(*args)
                 self.maxes[4] = 2
-                self.neural_add_naxes = [2,2,2,2,2]
-            
-            def create_white(self):
-                if self.storage[0] >= 1 and self.storage[1] >= 1 and self.storage[2] >= 1 and self.storage[3] >= 1:
+                self.neural_add_maxes = [2,2,2,2,2]
+
+            def create_white(self,count):
+                if self.storage[0] >= count and self.storage[1] >= count and self.storage[2] >= count and self.storage[3] >= count:
                     self.add_storage([0,0,0,0,1])
                     self.remove_storage([1,1,1,1,0])
                     return True
                 else :
                     return False
-            
-            def disassemble_white(self):
-                if self.storage[4] >= 1:
-                    self.storage[4] -= 1
-                    self.add_storage([1,1,1,1,0])
+
+            def disassemble_white(self,count):
+                if self.storage[4] >= count:
+                    self.storage[4] -= count
+                    self.add_storage([count,count,count,count,0])
 
             def neural_net(self):
                 output = np.dot(self.neural,np.array(self.detector()).T)
@@ -248,12 +253,13 @@ class Field:
                     #print(adds[k] * self.neural_add_maxes[k])
                 self.input_queue = [round(adds[k] * self.neural_add_maxes[k]) for k in range(5)]
                 self.input()
-                self.output([round(removes[k] * self.neural_remove_maxes[k]) for k in range(5)])
+                self.outputs = [round(removes[k] * self.neural_remove_maxes[k]) for k in range(5)]
+                self.output()
                 self.infos_output([round(infos[k]) for k in range(16)])
                 self.create_white(round(whites[0]))
                 self.disassemble_white(round(whites[1]))
 
-            
+
         class Storage(Cell) :
             def __init__(self,*args):
                 super().__init__(*args)
@@ -262,14 +268,13 @@ class Field:
                 self.maxes[2] = 20
                 self.maxes[3] = 20
                 self.maxes[4] = 20
-                self.neural_add_naxes = [20,20,20,20,20]
+                self.neural_add_maxes = [20,20,20,20,20]
 
 
         class Leaf(Cell) :
-            def __init__(self, color, *args):
+            def __init__(self, *args):
                 super().__init__(*args)
                 self.maxes[0] = 100
-                self.color:str = color
 
             def create_energy(self):
                 self.add_storage([10,0,0,0,0])
@@ -281,29 +286,180 @@ class Field:
 
 
         class Detector(Cell) :
-            pass
+            def __init__(self,*args) :
+                super().__init__(*args) #neural : 31*26
+
+            def detector(self):
+                detecteds = [] #31行
+                for k in range(21):
+                    if cluster.info_stage(self.stage)[k] <= self.detect_min_list[k] :
+                        detecteds.append(-1)
+                    elif self.detect_max_list[k] <= cluster.info_stage(self.stage)[k] :
+                        detecteds.append(1)
+                    else :
+                        detecteds.append((cluster.info_stage(self.stage)[k] - self.detect_min_list[k]) / (self.detect_max_list[k] - self.detect_min_list[k]) - 0.5)
+                for k in range(5):
+                    if self.maxes[k] == 0 :
+                        detecteds.append(-1)
+                    else:
+                        detecteds.append(2*self.storage[k]/self.maxes[k]-0.5)
+                for k in range(5):
+                    if cluster.field.material_blocks[cluster.x][cluster.y][k] <= self.detect_min_list[16+k] :
+                        detecteds.append(-1)
+                    elif self.detect_min_list[16+k] <= cluster.field.material_blocks[cluster.x][cluster.y][k] :
+                        detecteds.append(1)
+                    else :
+                        detecteds.append((cluster.field.material_blocks[cluster.x][cluster.y][k] - self.detect_min_list[k]) / (self.detect_max_list[k] - self.detect_min_list[k]) - 0.5)
+
+                return detecteds
 
 
         class Eater(Cell) :
-            pass
+            def __init__(self,*args) :
+                super().__init__(*args)
+                self.maxes[0] = 200
+
+            def eat(self,dest):
+                if dest == 1 :
+                    if self.cluster.field.cluster_blocks[self.cluster.x + 1][self.cluster.y] is not None:
+                        self.consume_energy(100)
+                        self.cluster.field.remove_cluster(self.cluster.x + 1, self.cluster.y)
+                if dest == 2 :
+                    if self.cluster.field.cluster_blocks[self.cluster.x - 1][self.cluster.y] is not None:
+                        self.consume_energy(100)
+                        self.cluster.field.remove_cluster(self.cluster.x - 1, self.cluster.y)
+                if dest == 3 :
+                    if self.cluster.field.cluster_blocks[self.cluster.x][self.cluster.y + 1] is not None:
+                        self.consume_energy(100)
+                        self.cluster.field.remove_cluster(self.cluster.x, self.cluster.y + 1)
+                if dest == 4 :
+                    if self.cluster.field.cluster_blocks[self.cluster.x][self.cluster.y - 1] is not None:
+                        self.consume_energy(100)
+                        self.cluster.field.remove_cluster(self.cluster.x, self.cluster.y - 1)
+
+            def neural_net(self): #26*28
+                output = np.dot(self.neural,np.array(self.detector()).T)
+                output_list = output.T
+                output_list = [(output_list[k]+1)*0.5 for k in range(len(output_list))]
+                #print(f"output{output_list}")
+                adds = output_list[:5]
+                removes = output_list[5:10]
+                infos = output_list[10:26]
+                eat = output_list[26:28]
+                for k in range(len(adds)):
+                    self.input_queue[k] += adds[k]
+                    #print(adds[k] * self.neural_add_maxes[k])
+                self.input_queue = [round(adds[k] * self.neural_add_maxes[k]) for k in range(5)]
+                self.input()
+                self.outputs = [round(removes[k] * self.neural_remove_maxes[k]) for k in range(5)]
+                self.output()
+                self.infos_output([round(infos[k]) for k in range(16)])
+                if 0.5 < eat[0] :
+                    self.eat(np.ceil(eat[1]*4))
+
+
 
         class ClusterDupricator(Cell) :
             def __init__(self, *args):
                 super().__init__(*args)
                 self.maxes[0] = 1000
-    
+
+            def create_cluster(self,dest):
+                pass
+
+            def neural_net(self):
+                output = np.dot(self.neural,np.array(self.detector()).T)
+                output_list = output.T
+                output_list = [(output_list[k]+1)*0.5 for k in range(len(output_list))]
+                #print(f"output{output_list}")
+                adds = output_list[:5]
+                removes = output_list[5:10]
+                infos = output_list[10:26]
+                duprication = output_list[26]
+                for k in range(len(adds)):
+                    self.input_queue[k] += adds[k]
+                    #print(adds[k] * self.neural_add_maxes[k])
+                self.input_queue = [round(adds[k] * self.neural_add_maxes[k]) for k in range(5)]
+                self.input()
+                self.outputs = [round(removes[k] * self.neural_remove_maxes[k]) for k in range(5)]
+                self.output()
+                self.infos_output([round(infos[k]) for k in range(16)])
+                self.create_cluster(np.ceil(duprication * 4))
+
+            def mutate_gene(self, gene_list:list):
+                picked = random.sample(range(961),mutation_rate)
+                for k in picked:
+                    pass #TODO変異の制限（material_listがマイナス、MinがMaxより大きいとか）
+                #TODO Cluster遺伝記法
+
+
+        def decode_gene(self,gene_list:list):
+            cell_type = gene_list[0]
+            stage = gene_list[1]
+            material_list = gene_list[2:7]
+            detect_max_list = gene_list[7:12]
+            detect_min_list = gene_list[12:17]
+            neural_add_maxes = gene_list[17:22]
+            neural_remove_maxes = gene_list[22:27]
+            neural = []
+            if cell_type == 0 or cell_type == 3 or cell_type == 4:
+                for k in range(26):
+                    neural.append([])
+                    for l in range(26):
+                        neural[k].append(gene_list[27+k*26+l])
+            elif cell_type == 1:
+                for k in range(36):
+                    neural.append([])
+                    for l in range(26):
+                        neural[k].append(gene_list[27+k*26+l])
+            elif cell_type == 2 or cell_type == 6:
+                for k in range(28):
+                    neural.append([])
+                    for l in range(26):
+                        neural[k].append(gene_list[27+k*26+l])
+            elif cell_type == 5:
+                for k in range(26):
+                    neural.append([])
+                    for l in range(31):
+                        neural[k].append(gene_list[27+k*31+l])
+            elif cell_type == 7:
+                for k in range(27):
+                    neural.append([])
+                    for l in range(26):
+                        neural[k].append(gene_list[27+k*26+l])
+            return cell_type, stage, material_list, detect_max_list, detect_min_list, neural_add_maxes, neural_remove_maxes, neural
+
+        def create_cell(self, gene_list:list):
+            gene = self.decode_gene(gene_list)
+            if gene[0] == 0:
+                self.add_cell_stage(gene[1],self.Cell(self,gene[1],gene[2],gene[3],gene[4],gene[5],gene[6],gene[7],0))
+            if gene[0] == 1:
+                self.add_cell_stage(gene[1],self.InOut(self,gene[1],gene[2],gene[3],gene[4],gene[5],gene[6],gene[7],1))
+            if gene[0] == 2:
+                self.add_cell_stage(gene[1],self.Factory(self,gene[1],gene[2],gene[3],gene[4],gene[5],gene[6],gene[7],2))
+            if gene[0] == 3:
+                self.add_cell_stage(gene[1],self.Storage(self,gene[1],gene[2],gene[3],gene[4],gene[5],gene[6],gene[7],3))
+            if gene[0] == 4:
+                self.add_cell_stage(gene[1],self.Leaf(self,gene[1],gene[2],gene[3],gene[4],gene[5],gene[6],gene[7],4))
+            if gene[0] == 5:
+                self.add_cell_stage(gene[1],self.Detector(self,gene[1],gene[2],gene[3],gene[4],gene[5],gene[6],gene[7],5))
+            if gene[0] == 6:
+                self.add_cell_stage(gene[1],self.Eater(self,gene[1],gene[2],gene[3],gene[4],gene[5],gene[6],gene[7],6))
+            if gene[0] == 7:
+                self.add_cell_stage(gene[1],self.ClusterDupricator(self,gene[1],gene[2],gene[3],gene[4],gene[5],gene[6],gene[7],7))
+
         def info_stage(self, stage_num):
             return self.stages[stage_num-1]
-        
+
         def print_stages_info(self):
             for k in range(self.stage_count):
                 print(f"stage{k}:{self.stages[k]}")
                 print(f"{k}Cell:{len(self.cell_stages[k])}")
-        
+
         def stage_zero_clear_infos(self):
             for k in range(16):
                 self.stages[0][k] = 0
-        
+
         def next_stage(self):
             temp_stages = []
             temp_stages.append(self.stages[self.stage_count-1])
@@ -323,8 +479,8 @@ class Field:
         def add_stage(self,stage,type,amount) :
             self.stages[stage][type] += amount
             return amount
-        
-        
+
+
         def add_cell_stage(self, stage, cell:Cell):
             self.cell_stages[stage].append(cell)
 
@@ -345,7 +501,7 @@ class Field:
                 else :
                     detecteds.append((cluster.info_stage(0)[k] - self.detect_min_list[k]) / (self.detect_max_list[k] - self.detect_min_list[k]) - 0.5)
             return detecteds
-        
+
         def neural_net(self):
             output = np.dot(self.neural,np.array(self.detector()).T)
             output_list = output.T
@@ -390,9 +546,9 @@ ClusterIDs: list = []
 field = Field(10,10)
 cluster = Field.Cluster(field,0,0,3,"aaa",0,[10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],np.array([[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.2,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0.5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]]),[5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5])
 field.add_cluster(0,0,cluster)
-cell = Field.Cluster.Cell(cluster,[0,0,0,0,0],[10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],np.array([[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.5,0,0,0,0,-0.5,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.5,0,0,0,0,-0.5,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.5,0,0,0,0,-0.5,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.5,0,0,0,0,-0.5,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,-0.5,0,0,0,0,0.5,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,-0.5,0,0,0,0,0.5,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,-0.5,0,0,0,0,0.5,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,-0.5,0,0,0,0,0.5,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]]),0,[3,1,1,1,0],[3,1,1,1,0],1)
+cell = Field.Cluster.Cell(cluster,0,[0,0,0,0,0],[10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[3,1,1,1,0],[3,1,1,1,0],np.array([[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.5,0,0,0,0,-0.5,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.5,0,0,0,0,-0.5,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.5,0,0,0,0,-0.5,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.5,0,0,0,0,-0.5,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,-0.5,0,0,0,0,0.5,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,-0.5,0,0,0,0,0.5,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,-0.5,0,0,0,0,0.5,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,-0.5,0,0,0,0,0.5,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]]),1)
 field.cluster_blocks[0][0].add_cell_stage(0,cell)
-leaf = Field.Cluster.Leaf("green",cluster,[0,0,0,0,0],[10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],np.array([[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.5,0,0,0,0,-0.5,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.5,0,0,0,0,-0.5,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.5,0,0,0,0,-0.5,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.5,0,0,0,0,-0.5,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,-0.5,0,0,0,0,0.5,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,-0.5,0,0,0,0,0.5,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,-0.5,0,0,0,0,0.5,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,-0.5,0,0,0,0,0.5,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]]),0,[30,1,1,1,0],[3,1,1,1,0],2)
+leaf = Field.Cluster.Leaf(cluster,0,[0,0,0,0,0],[10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[30,1,1,1,0],[3,1,1,1,0],np.array([[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.5,0,0,0,0,-0.5,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.5,0,0,0,0,-0.5,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.5,0,0,0,0,-0.5,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.5,0,0,0,0,-0.5,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,-0.5,0,0,0,0,0.5,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,-0.5,0,0,0,0,0.5,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,-0.5,0,0,0,0,0.5,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,-0.5,0,0,0,0,0.5,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]]),2)
 field.cluster_blocks[0][0].add_cell_stage(0,leaf)
 
 
@@ -401,5 +557,5 @@ for k in range(5):
 for k in range(5):
     field.cycle()
 
-##TODO:遺伝記法作成
+
 ##TODO:自動Cell,Cluster生成
