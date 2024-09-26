@@ -2,7 +2,7 @@ import numpy as np
 import random
 from dataclasses import dataclass
 
-mutation_rate = 10 # 10/961
+mutation_rate = 0.001
 
 class Field:
     def __init__(self,height,width):
@@ -12,7 +12,7 @@ class Field:
         self.material_blocks = [[[0 for _ in range(5)] for _ in range(width)] for _ in range(height)]
 
     class Cluster :
-        def __init__(self,field,x,y,stage_count,gene,ClusterID,detect_max_list,detect_min_list,neural,neural_output_maxes):
+        def __init__(self,field,x,y,stage_count,gene,detect_max_list,detect_min_list,neural_output_maxes,neural,ClusterID):
             """
             info1~info16,energy,red,green,blue,white
             """
@@ -39,16 +39,16 @@ class Field:
                 Detect_list : In Stage -> Info1~Info16,energy,red,green,blue | In Cell -> energy,red,green,blue
                 """
                 self.cluster:Field.Cluster = cluster # 所属するクラスター
-                self.storage:list[int,int,int,int,int] = materials_list
+                self.storage:list[int] = materials_list
                 self.detect_max_list:list = detect_max_list # Length must be 21 (ステージ内物質の検知情報)
                 self.detect_min_list:list = detect_min_list # Length must be 21 ()
                 self.neural:np.array = neural #横26縦26
-                self.outputs:list[int,int,int,int,int] = [0,0,0,0,0]
-                self.maxes:list[int,int,int,int,int] = [10,2,2,2,0]
+                self.outputs:list[int] = [0,0,0,0,0]
+                self.maxes:list[int] = [10,2,2,2,0]
                 self.stage:int = stage
-                self.input_queue:list[int,int,int,int,int] = [0,0,0,0,0]
-                self.neural_add_maxes:list[int,int,int,int,int] = neural_add_maxes #意味的にはinputだけどinputだとニューラルネットワークの入力と意味が競合しちゃうからaddにしてある
-                self.neural_remove_maxes:list[int,int,int,int,int] = neural_remove_maxes #こっちも意味はoutput
+                self.input_queue:list[int] = [0,0,0,0,0]
+                self.neural_add_maxes:list[int] = neural_add_maxes #意味的にはinputだけどinputだとニューラルネットワークの入力と意味が競合しちゃうからaddにしてある
+                self.neural_remove_maxes:list[int] = neural_remove_maxes #こっちも意味はoutput
                 self.cell_ID:int = cell_ID
 
             def __post_init__(self):
@@ -388,9 +388,25 @@ class Field:
 
             def mutate_gene(self, gene_list:list):
                 picked = random.sample(range(961),mutation_rate)
-                for k in picked:
-                    pass #TODO変異の制限（material_listがマイナス、MinがMaxより大きいとか）
+
+                    #TODO変異の制限（material_listがマイナス、MinがMaxより大きいとか）
                 #TODO Cluster遺伝記法
+
+
+        def decode_genes(self,genes:list):
+            x = genes[0]
+            y = genes[1]
+            stage_count = genes[2]
+            detect_max_list = genes[3:8]
+            detect_min_list = genes[8:13]
+            neural_output_maxes = genes[13:18]
+            neural = []
+            for k in range(16):
+                neural.append([])
+                for l in range(21):
+                    neural[k].append(genes[18+k*21+l])
+            cells = genes[354:]
+            return x, y, stage_count, detect_max_list, detect_min_list, neural_output_maxes, neural, cells
 
 
         def decode_gene(self,gene_list:list):
@@ -503,7 +519,7 @@ class Field:
             return detecteds
 
         def neural_net(self):
-            output = np.dot(self.neural,np.array(self.detector()).T)
+            output = np.dot(self.neural,np.array(self.detector()).T) #21*16
             output_list = output.T
             output_list = [(output_list[k]+1)*0.5 for k in range(len(output_list))]
             self.stage_zero_clear_infos()
@@ -540,11 +556,9 @@ class Field:
                     self.cluster_blocks[x][y].cycle()
 
 
-ClusterIDs: list = []
-
 
 field = Field(10,10)
-cluster = Field.Cluster(field,0,0,3,"aaa",0,[10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],np.array([[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.2,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0.5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]]),[5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5])
+cluster = Field.Cluster(field,0,0,3,"aaa",[10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5],np.array([[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.2,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0.5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]]),0)
 field.add_cluster(0,0,cluster)
 cell = Field.Cluster.Cell(cluster,0,[0,0,0,0,0],[10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[3,1,1,1,0],[3,1,1,1,0],np.array([[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.5,0,0,0,0,-0.5,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.5,0,0,0,0,-0.5,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.5,0,0,0,0,-0.5,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.5,0,0,0,0,-0.5,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,-0.5,0,0,0,0,0.5,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,-0.5,0,0,0,0,0.5,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,-0.5,0,0,0,0,0.5,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,-0.5,0,0,0,0,0.5,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]]),1)
 field.cluster_blocks[0][0].add_cell_stage(0,cell)
@@ -558,4 +572,5 @@ for k in range(5):
     field.cycle()
 
 
-##TODO:自動Cell,Cluster生成
+##TODO:自動Cluster生成
+#Todo: 突然変異
