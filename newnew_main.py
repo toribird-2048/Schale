@@ -615,7 +615,7 @@ class Field:
             for k in range(self.stage_count-1):
                 temp_stages.append(self.stages[k])
             self.stages = copy.deepcopy(temp_stages) #TODO:print_stages_info()が2重に表示される問題があるが、どうやらこの617行目と同じ内容の、又はそれ自身のプログラムのいづれかが実行されるかどうかがかかわっているらしい　実行されないと増殖しない
-
+            #TODO:エネルギ消費も忘れてる
 
         def remove_stage(self,stage,type,amount):
             if self.stages[stage][type] < amount :
